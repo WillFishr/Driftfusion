@@ -28,9 +28,12 @@ classdef explore
             parfor i = 1:length(parval1)
                 
                 par = par_base;
-                par.Ana = 0;
+                par.Ana = 0;                    
                 par = exploreparhelper(par, str1, parval1(i));
-                %par.taup(1) = par.taun(1);
+                                            %This region can be used to set
+                                            %conditions for the parameter
+                                            %exploration
+                par.PhiC = par.PhiA;        %Set paramters to co-vary here
                 
                 if JVstatsswitch == 1
                     Voc_f = zeros(1, length(parval2));
@@ -50,6 +53,8 @@ classdef explore
                 
                 if SCLCswitch
                     SCLCVapp = zeros(1, JVpnts);
+                    
+                    
                     SCLCJ = zeros(length(parval2), JVpnts);
                     SCLCgradJV = zeros(length(parval2), JVpnts);
                     SCLCmu_MG = zeros(length(parval2), JVpnts);

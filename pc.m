@@ -41,8 +41,8 @@ classdef pc
         % are inserted automatically between each layer with a width
         % defined by the property DINT and number of points defined by
         % PINT.
-        dcell = {{20e-7}; {30e-7, 450e-7, 30e-7}; {20e-7}};         % Layer and subsection thickness array
-        pcell = {{20}; {30, 225, 30}; {20}};                          % Number of points in layers and subsections array  
+        dcell = {{2e-7, 30e-7, 2e-7}; {2e-7, 450e-7, 30e-7}; {2e-7, 30e-7, 2e-7}};         % Layer and subsection thickness array
+        pcell = {{30, 225, 30}; {30, 225, 30}; {30, 225, 30}};                          % Number of points in layers and subsections array  
         dint = 4e-7;        % Interfacial region thickness (x_mesh_type = 3)
         pint = 40;          % Interfacial points (x_mesh_type = 3)
         
@@ -101,46 +101,58 @@ classdef pc
         % library. The names here do not influence the electrical properties of the
         % device. See INDEX OF REFRACTION LIBRARY for choices- names must be enetered 
         % exactly as given in the column headings with the '_n', '_k' omitted
-        stack = {'PEDOT', 'MAPICl', 'PCBM'}
-        
+        stack = {'PCBM', 'MAPI', 'PCBM'}
+        %stack = {'PEDOT','MAPICl','PTAA'}
         %% Energy levels [eV] 
-        EA = [-3.0, -3.8, -3.0];           % Electron affinity
-        IP = [-5.1, -5.4, -5.1];           % Ionisation potential
+        EA = [-3.7, -3.8, -3.7];           % Electron affinity
+        IP = [-6.1, -5.3, -6.1];           % Ionisation potential
         % PCBM: Sigma Aldrich https://www.sigmaaldrich.com/technical-documents/articles/materials-science/organic-electronics/pcbm-n-type-semiconductors.html 
-        
+        % Also: https://www.sigmaaldrich.com/catalog/product/ALDRICH/684449?lang=en&region=GB
         %% Equilibrium Fermi energies [eV]
         % These define the doping density in each layer- see NA and ND calculations in methods         
-        E0 = [-5.05, -4.6, -5.05];   
+        E0 = [-4.3, -4.55, -4.3];   
         
+        % n-type PCBM https://www.researchgate.net/publication/260714083_The_band_energy_diagram_of_PCBM-DH6T_bulk_heterojunction_solar_cells_Synchrotron-induced_photoelectron_spectroscopy_on_solution_processed_DH6TPCBM_blends_and_in_situ_prepared_PCBMDH6T_interfaces
+       
         %% SRH trap energies [eV]
         % These must exist within the energy gap of the appropriate layers
         % and define the variables PT and NT in the expression:
         % U = (np-ni^2)/(taun(p+pt) +taup(n+nt))
-        Et_bulk =[-4.05, -4.6, -4.05];
+        Et_bulk =[-4.9, -4.55, -4.9];
         
         %% Electrode Fermi energies [eV]
         % Fermi energies of the metal electrode. These define the built-in voltage, Vbi 
         % and the boundary carrier concentrations nleft, pleft, nright, and 
         % pright
-        PhiA = -5.05;
-        PhiC = -5.05;
         
+        %Phi  = -5.1;                       %Defining a single fermi level for both electrodes
+        
+        %PhiA = -5.1; gold
+        %PhiC = -5.1; gold 
+        
+        PhiA = -4.1; %Al
+        PhiC = -4.1; %Al 
+        
+        %Au -5.1 , 
         %% Effective Density Of States (eDOS) [cm-3]
-        N0 = [1e19, 1e19, 1e19];
+        N0 = [3e19, 1e19, 3e19];
         % PEDOT eDOS: https://aip.scitation.org/doi/10.1063/1.4824104
         % MAPI eDOS: F. Brivio, K. T. Butler, A. Walsh and M. van Schilfgaarde, Phys. Rev. B, 2014, 89, 155204.
-        % PCBM eDOS:
+        % PCBM eDOS: 3*10^25 m-3 https://www.rug.nl/research/portal/files/2893809/thesis.pdf
         
         %% Mobile ions
         % Mobile ion defect density [cm-3] 
-        Nion = [0, 1e18, 0];                            % A. Walsh et al. Angewandte Chemie, 2015, 127, 1811.     
+        Nion = [0, 1e18, 0];                % A. Walsh et al. Angewandte Chemie, 2015, 127, 1811.     
+        %Nion = [0, 1e18, 0];
         % Approximate density of iodide sites [cm-3]
         % Limits the density of iodide vancancies
         DOSion = [1e-6, 1.21e22, 1e-6];                 % P. Calado thesis           
+        %DOSion = [1e-6, 1.21e22, 1e-6];
         
         %% Mobilities   [cm2V-1s-1]
-        mue = [100, 20, 100];         % electron mobility 
-        muh = [100, 20, 100];         % hole mobility
+        mue = [0.21, 20, 0.21];         % electron mobility 
+        muh = [0.21, 20, 0.21];         % hole mobility
+        %muh = [100, 20, 100]
         
         muion = [0, 1e-10, 0];          % ion mobility
         % PTPD h+ mobility: https://pubs.rsc.org/en/content/articlehtml/2014/ra/c4ra05564k
@@ -149,15 +161,17 @@ classdef pc
         % Spiro muh = 0.02 cm2V-1s-1 Hawash2018
         
         %% Relative dielectric constants
-        epp = [23, 23, 23];    
-                
+        epp = [3.9, 23, 3.9];    
+        
+        % PCBM https://www.rug.nl/research/portal/files/2893809/thesis.pdf
         %% Uniform generation rate [cm-3s-1]
         G0 = [0, 2.6409e+21, 0];        % Approximate Uniform generation rate @ 1 Sun for 510 nm active layer thickness
         
         %% Recombination
         % Radiative recombination, U = k(np - ni^2)
         % [cm3 s-1] Radiative Recombination coefficient
-        krad = [6.3e-11, 3.6e-12, 6.3e-11];
+        krad = [3.6e-12, 3.6e-12, 3.6e-12]
+        %krad = [6.3e-11, 3.6e-12, 6.3e-11];
         
         %% Bulk SRH time constants for each layer [s]
         taun_bulk = [1e-6, 1e-6, 1e-6];           % [s] SRH time constant for electrons

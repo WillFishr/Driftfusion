@@ -1,4 +1,5 @@
 function JV = doJV(sol_ini, JVscan_rate, JVscan_pnts, Intensity, mobseti, Vstart, Vend, option)
+tic
 disp('Current voltage scan')
 
 % A procedure for running JV scans using DF
@@ -22,6 +23,7 @@ par.Ana = 1;
 par.figson = 1;
 par.Int = 0;
 par.pulseon = 0;
+par.OC = 0;
 par.mobseti = mobseti;
 
 %% JV settings
@@ -41,7 +43,7 @@ if option ==1 || option ==3
         
         disp('Dark forward scan...')
         JV.dk.f = df(sol_ini, par);
-        
+        JV.dk.f.par.JV = 0;
         disp('Complete.')
         
         %% Dark reverse scan
@@ -52,7 +54,7 @@ if option ==1 || option ==3
         par.JV = 1;
         
         JV.dk.r = df(JV.dk.f, par);
-        
+        JV.dk.r.par.JV = 0;
         disp('Complete.')
         
 end
@@ -90,7 +92,7 @@ if option ==2 || option ==3
         par.tpoints = par.JVscan_pnts;
         
         JV.ill.f = df(sol_i_1S, par);
-        
+        JV.ill.f.par.JV = 0;
         disp('Complete.')
         
         %% Light reverse
@@ -100,6 +102,7 @@ if option ==2 || option ==3
         par.Vend = Vstart;
         
         JV.ill.r = df(JV.ill.f, par);
+        JV.ill.r.par.JV = 0;
         disp('Complete.')
         
         figure(11)
@@ -109,5 +112,5 @@ if option ==2 || option ==3
         plotJV(JV, option)
         JV.stats = JVstats(JV);
 end
-
+toc
 end

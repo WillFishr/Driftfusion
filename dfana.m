@@ -38,6 +38,7 @@ sol = solstruct.sol;
 par = solstruct.par;
 x = solstruct.x;
 t = solstruct.t;
+dev = par.dev;
 
 if par.OM == 1
     gx = solstruct.gx;
@@ -98,8 +99,8 @@ nimat = repmat(par.dev.ni, length(t), 1);
 kradmat = repmat(par.dev.krad, length(t), 1);
 taunmat = repmat(par.dev.taun, length(t), 1);
 taupmat = repmat(par.dev.taup, length(t), 1);
-ntmat =  repmat(par.dev.nt, length(t), 1);
-ptmat =  repmat(par.dev.pt, length(t), 1);
+ntmat = repmat(par.dev.nt, length(t), 1);
+ptmat = repmat(par.dev.pt, length(t), 1);
 
 Ecb = EAmat-V;                                 % Conduction band potential
 Evb = IPmat-V;                                 % Valence band potential
@@ -139,18 +140,15 @@ if par.OC == 0 && par.pulseon == 1
     
 end
 
-
 for i=1:length(t)
     
     Fp(i,:) = -gradient(V(i, :), x);                      % Electric field calculated from V
     
 end
 
-Potp = V(end, :);
-
 rhoctot = trapz(x, rhoc, 2)/par.dcum(end);   % Net charge
 
-Irho = a - Nionmat;                  % Net ionic charge
+Irho = a - Nionmat;                          % Net ionic charge
 Irhotot = trapz(x, Irho, 2)/par.dcum(end);   % Total Net ion charge
 
 ntot = trapz(x, n, 2);     % Total
@@ -167,9 +165,7 @@ else
 end
 
 %% Current calculation from continuity equations
-
 for j = 1:size(n, 2)
-    
     dndt(:,j) = gradient(n(:,j), t);
     dpdt(:,j) = gradient(p(:,j), t);
     dadt(:,j) = gradient(a(:,j), t);
@@ -193,7 +189,7 @@ switch par.OM
     % Uniform generation
     case 0
         
-        g = par.Int*par.dev.G0;
+        g = par.Int*dev.G0;
         
     case 1
         
@@ -296,11 +292,15 @@ for i=1:2*length(par.parr)-1
         j = j+1;
     end
 end
+
 pcum = cumsum(parrint);
 pcum = [0,pcum]+1;
 pcum(end) = pcum(end)-1;
 
+
 if capfigon
+
+
 
 for i=1:length(t)
     % Charge densities across interfaces
@@ -350,7 +350,7 @@ end
 
 % Electric field
 for i = 1:length(t)
-    Field(i, :) = gradient(V(i, :), x);
+    Field(i, :) = -gradient(V(i, :), x);
 end
 
 if capfigon
@@ -392,28 +392,7 @@ if par.figson == 1
     
     yrange = [-inf, inf];
     % yrange = [-5e-7, 5e-7];
-    % ion currents
-    
-    %%%%% FIGURES %%%%%
-    % Plotting defaults
-    set(0,'DefaultLineLinewidth',1);
-    set(0,'DefaultAxesFontSize',16);
-    set(0,'DefaultFigurePosition', [600, 400, 450, 300]);
-    set(0,'DefaultAxesXcolor', [0, 0, 0]);
-    set(0,'DefaultAxesYcolor', [0, 0, 0]);
-    set(0,'DefaultAxesZcolor', [0, 0, 0]);
-    set(0,'DefaultTextColor', [0, 0, 0]);
-    
-    
-    % Field strength at centre of active layer and mean field
-    % strength across perovskite as function of time
-%     figure(2)
-%     plot(Vapp_arr(2:end), -Field((2:end), pcum(3)+round(parrint(3)/2)));%, t, mean(Field(:, pcum(3):pcum(4)), 2))
-%     xlabel('Vapp [V]')
-%     ylabel('Electric field [Vcm-1]')
-    %legstr = [par.stack(1), num2str(round(mean(Vapp_arr/t)), 2),'Vs-1'];
-    %legend([par.stack(1), num2str(round(mean(Vapp_arr/t))),'Vs-1'])
-    
+    % ion current
     
     for i=1:length(tarr)
         
@@ -761,9 +740,7 @@ if par.figson == 1
             ylabel('Jp [A]')
             legend('Drift', 'Diff')
             hold on
-        end
-        
-        
+        end  
         
         if ionfigon ==1
             
@@ -858,18 +835,16 @@ if par.figson == 1
         %     PLint(pparr(i));
         %
         % Band Diagram
-        %FH1 = figure(1);
+        FH1 = figure(1);
         %set(FigHandle, 'units','normalized','position',[.1 .1 .4 .4]);
-        %PH1 = subplot(3,1,1);
-        figure(70)
+        PH1 = subplot(3,1,1);
+        %figure(70)
         plot (xnm, Efn(pparr(i),:), '--', xnm, Efp(pparr(i),:), '--', xnm, Ecb(pparr(i), :), xnm, Evb(pparr(i) ,:));
-        %legend('E_{fn}', 'E_{fp}', 'CB', 'VB');
+        legend('E_{fn}', 'E_{fp}', 'CB', 'VB');
         set(legend,'FontSize',12);
         xlabel('Position [nm]');
         ylabel('Energy [eV]');
         xlim([xrange(1), xrange(2)]);
-        %xlim([0, xnm(end)]);
-        %ylim([-inf, 0.5]);
         set(legend,'FontSize',12);
         set(legend,'EdgeColor',[1 1 1]);
         grid off;
@@ -879,13 +854,12 @@ if par.figson == 1
         
         % Final Charge Densities
         %figure(2)
-        %PH2 = subplot(3,1,2);
-        figure(71)
+        PH2 = subplot(3,1,2);
+        %figure(71)
         semilogy(xnm, n(pparr(i), :), xnm, p(pparr(i), :));
         ylabel('{\itn, p} [cm^{-3}]')
-        %legend('\itn', '\itp')
+        legend('\itn', '\itp')
         xlabel('Position [nm]')
-        %xlim([0, xnm(end)]);
         xlim([xrange(1), xrange(2)]);
         ylim([1e0, 1e20]);
         set(legend,'FontSize',12);
@@ -894,12 +868,11 @@ if par.figson == 1
         
         hold on
         
-        %PH3 = subplot(3,1,3);
-        figure(72)
+        PH3 = subplot(3,1,3);
+        %figure(72)
         plot(xnm, (rhoa(pparr(i),:))/1e18, 'black');
         ylabel('{\it\rho a} [x10^{18} cm^{-3}]');
         xlabel('Position [nm]');
-        %xlim([0, xnm(end)]);
         xlim([xrange(1), xrange(2)]);
         %ylim([0, 1.1*(max(sol(pparr(i),:,3))/1e19)]);
         set(legend,'FontSize',12);
@@ -936,7 +909,6 @@ if par.figson == 1
         % set(legend,'FontSize',14);
         % set(legend,'EdgeColor',[1 1 1]);
         % grid off
-        
         %
         if par.OM == 1 && par.Int~=0 || par.OM == 2 && par.Int~=0
             
@@ -976,19 +948,19 @@ title('Electric Field');
         
     end
     
-    %     figure(1)
-    %     subplot(3,1,1);
-    %     hold off
-    %     subplot(3,1,2);
-    %     hold off
-    %     subplot(3,1,3);
-    %     hold off
-    figure(70)
-    hold off
-    figure(71)
-    hold off
-    figure(72)
-    hold off
+        figure(1)
+        subplot(3,1,1);
+        hold off
+        subplot(3,1,2);
+        hold off
+        subplot(3,1,3);
+        hold off
+%     figure(70)
+%     hold off
+%     figure(71)
+%     hold off
+%     figure(72)
+%     hold off
     
     if ionfigon ==1
         figure(3)

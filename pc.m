@@ -13,12 +13,10 @@ classdef pc
         kB = 8.617330350e-5;     % Boltzmann constant [eV K^-1]
         epp0 = 552434;           % Epsilon_0 [e^2 eV^-1 cm^-1] - Checked (02-11-15)
         q = 1;                   % Charge of the species in units of e.
-        e = 1.61917e-19;         % Elementary charge in Coulombs.
-        
+        e = 1.61917e-19;         % Elementary charge in Coulombs.      
     end
     
-    properties
-        
+    properties      
         % Temperature [K]
         T = 300;
         
@@ -41,12 +39,16 @@ classdef pc
         % are inserted automatically between each layer with a width
         % defined by the property DINT and number of points defined by
         % PINT.
-        dcell = {{2e-7, 30e-7, 2e-7}; {2e-7, 450e-7, 30e-7}; {2e-7, 30e-7, 2e-7}};         % Layer and subsection thickness array
-        pcell = {{30, 225, 30}; {30, 225, 30}; {30, 225, 30}};                          % Number of points in layers and subsections array  
-        dint = 4e-7;        % Interfacial region thickness (x_mesh_type = 3)
-        pint = 40;          % Interfacial points (x_mesh_type = 3)
+
+
+
+        dcell = {{50e-7}; {30e-7, 450e-7, 30e-7}; {60e-7}};         % Layer and subsection thickness array  
+        pcell = {{50}; {30, 225, 30}; {60}};                          % Number of points in layers and subsections array  
+        dint = 2e-7;        % Interfacial region thickness (x_mesh_type = 3)
+        pint = 20;          % Interfacial points (x_mesh_type = 3)
+
         
-        % Define spatial cordinate system- typeically this will be kept at
+        % Define spatial cordinate system- typically this will be kept at
         % 0 for most applications
         % m=0 cartesian
         % m=1 cylindrical polar coordinates
@@ -63,10 +65,10 @@ classdef pc
         % are read out and so does not influence convergence. Defining an
         % unecessarily high number of points however can be expensive owing
         % to interpolation of the solution.
+        tmesh_type = 2;             % Mesh type- for use with meshgen_t
         t0 = 1e-16;                 % Initial log mesh time value
         tmax = 1e-12;               % Max time value
         tpoints = 100;              % Number of time points
-        tmesh_type = 2;             % Mesh type- for use with meshgen_t
         
         %% GENERAL CONTROL PARAMETERS
         OC = 0;                 % Closed circuit = 0, Open Circuit = 1
@@ -90,7 +92,7 @@ classdef pc
         % Uniform generation uses 
         % 0 = Uniform Generation
         % 1 = Beer Lambert
-        OM = 0;
+        OM = 1;
         
         %%%%%%%%%%% LAYER MATERIAL PROPERTIES %%%%%%%%%%%%%%%%%%%%
         % Numerical values should be given as a row vector with the number of 
@@ -174,8 +176,8 @@ classdef pc
         %krad = [6.3e-11, 3.6e-12, 6.3e-11];
         
         %% Bulk SRH time constants for each layer [s]
-        taun_bulk = [1e-6, 1e-6, 1e-6];           % [s] SRH time constant for electrons
-        taup_bulk = [1e-6, 1e-6, 1e-6];           % [s] SRH time constant for holes   
+        taun_bulk = [1e-6, 1e-7, 1e-6];           % [s] SRH time constant for electrons
+        taup_bulk = [1e-6, 1e-7, 1e-6];           % [s] SRH time constant for holes   
         
         %% Interfacial SRH time constants [s]
         % Must be a row vector of length (number of layers)-1  
@@ -185,11 +187,14 @@ classdef pc
         %% Surface recombination and extraction coefficients [cm s-1]
         % Descriptions given in the comments considering that holes are
         % extracted at left boundary, electrons at right boundary
-        sn_l = 1e8;     % electron surface recombination velocity left boundary
-        sn_r = 1e8;     % electron extraction velocity right boundary
-        sp_l = 1e8;     % hole extraction left boundary         
-        sp_r = 1e8;     % hole surface recombination velocity right boundary
+        sn_l = 1e7;     % electron surface recombination velocity left boundary
+        sn_r = 1e7;     % electron extraction velocity right boundary
+        sp_l = 1e7;     % hole extraction left boundary         
+        sp_r = 1e7;     % hole surface recombination velocity right boundary
         
+        %% Series resistance
+        Rs = 0;
+              
         %% Defect recombination rate coefficient
         % Currently not used
         k_defect_p = 0;
@@ -375,8 +380,7 @@ classdef pc
                 error(msg);
             elseif length(par.taup_inter) ~= length(par.d)-1
                 msg = 'Interfacial hole SRH time constant array (taup_inter) does not have the correct number of elements. SRH properties for interfaces must have length(d)-1 elements.';
-                error(msg);
-                
+                error(msg);            
             end
             
             % Build the device- properties are defined at each point
@@ -466,7 +470,7 @@ classdef pc
             value = 0.5.*(par.EA+par.IP)+par.kB*par.T*log(par.N0./par.N0);
         end
         
-        %% Conduction band gradients at interfaces
+       %% Conduction band gradients at interfaces
         function value = get.dEAdx(par)
             value = zeros(length(par.stack)-1);
             for i = 1:length(par.stack)-1
@@ -511,7 +515,7 @@ classdef pc
             value = F.nfun(par.N0, par.EA, par.E0, par.T, par.stats);
         end
         
-        %% Equilibrium hole densitis
+        %% Equilibrium hole densities
         function value = get.p0(par)
             value = F.pfun(par.N0, par.IP, par.E0, par.T, par.stats);
 
@@ -710,40 +714,15 @@ classdef pc
                             % Ion mobility
                             dmuiondx = (par.muion(i+1)-par.muion(i))/(par.dint);
                             dev.muion(j) = par.muion(i) + xprime*dmuiondx;
-                            % Effective density of states
-                            dN0dx = (par.N0(i+1)-par.N0(i))/(par.dint);
-                            dev.N0(j) = par.N0(i) + xprime*dN0dx;
-                            dev.gradN0(j) = dN0dx;
-                            % Acceptor density
-                            dNAdx = (par.NA(i+1)-par.NA(i))/(par.dint);
-                            dev.NA(j) = par.NA(i) + xprime*dNAdx;
-                            % Donor density
-                            dNDdx = (par.ND(i+1)-par.ND(i))/(par.dint);
-                            dev.ND(j) = par.ND(i) + xprime*dNDdx;
                             % Dielectric constants
                             deppdx = (par.epp(i+1)-par.epp(i))/(par.dint);
                             dev.epp(j) = par.epp(i) + xprime*deppdx;
-                            % Intrinsic carrier densities
-                            dnidx = (par.ni(i+1)-par.ni(i))/(par.dint);
-                            dev.ni(j) = par.ni(i) + xprime*dnidx;
-                            % Equilibrium carrier densities
-                            dn0dx = (par.n0(i+1)-par.n0(i))/(par.dint);
-                            dev.n0(j) = par.n0(i) + xprime*dn0dx;
-                            % Equilibrium carrier densities
-                            dp0dx = (par.p0(i+1)-par.p0(i))/(par.dint);
-                            dev.p0(j) = par.p0(i) + xprime*dp0dx;
                             % Equilibrium Fermi energy
                             dE0dx = (par.E0(i+1)-par.E0(i))/(par.dint);
                             dev.E0(j) = par.E0(i) + xprime*dE0dx;
                             % Uniform generation rate
                             dG0dx = (par.G0(i+1)-par.G0(i))/(par.dint);
                             dev.G0(j) = par.G0(i) + xprime*dG0dx;
-                            % Static ion background density
-                            dNiondx = (par.Nion(i+1)-par.Nion(i))/(par.dint);
-                            dev.Nion(j) = par.Nion(i) + xprime*dNiondx;
-                            % Ion density of states
-                            dDOSiondx = (par.DOSion(i+1)-par.DOSion(i))/(par.dint);
-                            dev.DOSion(j) = par.DOSion(i) + xprime*dDOSiondx;
                             % Radiative recombination coefficient
                             dkraddx = (par.krad(i+1)-par.krad(i))/(par.dint);
                             dev.krad(j) = par.krad(i) + xprime*dkraddx;
@@ -753,6 +732,34 @@ classdef pc
                             % SRH time constants
                             dev.taun(j) = par.taun_inter(i);
                             dev.taup(j) = par.taup_inter(i);
+                             % Static ion background density
+                            dNiondx = (par.Nion(i+1)-par.Nion(i))/(par.dint);
+                            dev.Nion(j) = par.Nion(i) + xprime*dNiondx;
+                            % Ion density of states
+                            dDOSiondx = (par.DOSion(i+1)-par.DOSion(i))/(par.dint);
+                            dev.DOSion(j) = par.DOSion(i) + xprime*dDOSiondx;
+                            
+                            %% logarithmically graded variables
+                            % Effective density of states
+                            dlogN0dx = (log(par.N0(i+1))-log(par.N0(i)))/(par.dint);
+                            dev.N0(j) = exp(log(par.N0(i)) + xprime*dlogN0dx);
+                            % Acceptor density
+                            dlogNAdx = (log(par.NA(i+1))-log(par.NA(i)))/(par.dint);
+                            dev.NA(j) = exp(log(par.NA(i)) + xprime*dlogNAdx);
+                            % Donor density
+                            dlogNDdx = (log(par.ND(i+1))-log(par.ND(i)))/(par.dint);
+                            dev.ND(j) = exp(log(par.ND(i)) + xprime*dlogNDdx);
+                            % Intrinsic carrier densities
+                            dlognidx = (log(par.ni(i+1))-log(par.ni(i)))/(par.dint);
+                            dev.ni(j) = exp(log(par.ni(i)) + xprime*dlognidx);
+                            % Equilibrium carrier densities
+                            dlogn0dx = (log(par.n0(i+1))-log(par.n0(i)))/(par.dint);
+                            dev.n0(j) = exp(log(par.n0(i)) + xprime*dlogn0dx);
+                            % Equilibrium carrier densities
+                            dlogp0dx = (log(par.p0(i+1))-log(par.p0(i)))/(par.dint);
+                            dev.p0(j) = exp(log(par.p0(i)) + xprime*dlogp0dx);
+                            
+
                             
                             if par.stats == 'Fermi'
                                 % Build diffusion coefficient structure
@@ -783,9 +790,9 @@ classdef pc
             end
             
 %             Alternative gradient calculation appears less stable
-%             dev.gradN0 = gradient(dev.N0, xx);
-%             dev.gradEA = gradient(dev.EA, xx);
-%             dev.gradIP = gradient(dev.IP, xx);
+            dev.gradN0 = gradient(dev.N0, xx);
+            dev.gradEA = gradient(dev.EA, xx);
+            dev.gradIP = gradient(dev.IP, xx);
              dev.nt = F.nfun(dev.N0, dev.EA, dev.Et, par.T, par.stats);
              dev.pt = F.pfun(dev.N0, dev.IP, dev.Et, par.T, par.stats);
         end

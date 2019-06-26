@@ -53,12 +53,15 @@ classdef explore
                 
                 if SCLCswitch
                     SCLCVapp = zeros(1, JVpnts);
-                    
-                    
                     SCLCJ = zeros(length(parval2), JVpnts);
                     SCLCgradJV = zeros(length(parval2), JVpnts);
                     SCLCmu_MG = zeros(length(parval2), JVpnts);
                     SCLCmax_gradJV = zeros(1, length(parval2));
+                    SCLCmu_MG_maxgrad = zeros(1, length(parval2));
+                   % SCLCmu_MG_GRAD2 = zeros(length(parval2), JVpnts);
+                    SCLC_delta_mue = zeros(length(parval2), JVpnts); 
+                    SCLC_delta_muh = zeros(length(parval2), JVpnts);
+                    
                 end
                 
                 for j = 1:length(parval2)
@@ -81,6 +84,11 @@ classdef explore
                         SCLCgradJV(j,:) = SCLCstats.gradJV';
                         SCLCmu_MG(j,:) = SCLCstats.mu_MG';
                         SCLCmax_gradJV(j) = SCLCstats.max_gradJV;
+                        SCLCmu_MG_maxgrad(j) = SCLCstats.mu_MG_maxgrad;
+                        %SCLCmu_MG_GRAD2(j) = SCLCstats.mu_MG_GRAD2;
+                        SCLC_delta_mue(j,:) = SCLCstats.delta_mue';
+                        SCLC_delta_muh(j,:) = SCLCstats.delta_muh';
+                        
                     end
                     
                     if JVstatsswitch == 1
@@ -125,6 +133,11 @@ classdef explore
                     CC(:,:,i) = SCLCgradJV;
                     DD(:,:,i) = SCLCmu_MG;
                     EE(i,:) = SCLCmax_gradJV;
+                    FF(i,:) = SCLCmu_MG_maxgrad;
+                    %GG(:,:,i) = SCLCmu_MG_GRAD2;
+                    HH(:,:,i) = SCLC_delta_mue;
+                    II(:,:,i) = SCLC_delta_muh;
+                    
                 end
                 
             end
@@ -151,6 +164,10 @@ classdef explore
                 parexsol.SCLCstats.gradJV = CC; 
                 parexsol.SCLCstats.mu_MG = DD;
                 parexsol.SCLCstats.max_gradJV = EE;
+                parexsol.SCLCstats.mu_MG_maxgrad = FF;
+               % parexsol.SCLCstats.mu_MG_GRAD2 = GG; 
+                parexsol.SCLCstats.delta_mue = HH;
+                parexsol.SCLCstats.delta_muh = II; 
             end
             
             parexsol.parnames = parnames;
@@ -256,19 +273,111 @@ classdef explore
             %caxis([1.05, 1.15])
         end
         
-        function plotmu_MG(parexsol)
+        function plotdeltamu(parexsol)
             
-            figure(3003)
-            surf(parexsol.parval1, parexsol.parval2,  parexsol.SCLCstats.max_gradJV);
+            figure(005)
+            surf(parexsol.parval1, parexsol.parval2, squeeze(parexsol.SCLCstats.delta_mue(:,1,:)))
             s1 = gca;
-            xlabel('Fermi-IP offset [eV]')
-            ylabel('N_{ion}')
+            title('mu MG - mu input')
+            xlim([parexsol.parval1(1,1) parexsol.parval1(1,end)])
+            ylim([parexsol.parval2(1,1) parexsol.parval2(1,end)])
+            xlabel(parexsol.parnames{1,1})
+            ylabel(parexsol.parnames{1,2})
             zlabel('Calculated mobility [cm2V-1s-1]')
-            set(s1,'XScale','log');
-            set(s1,'ZScale','log');
+%             set(s1,'XScale','log');
+            set(s1,'YScale','log');
+%             set(s1,'ZScale','log');
             shading interp
             cb = colorbar();
-            cb.Ruler.Scale = 'log';
+%             cb.Ruler.Scale = 'log';
+            cb.Ruler.MinorTick = 'on';
+%            caxis([1e-10, 1])            
+%            xlim([parexsol.parval2(1)-parexsol.par_base.IPi, parexsol.parval2(end)-parexsol.par_base.IPi])
+%             
+%             figure(3004)
+%             semilogy(parexsol.parval2-parexsol.par_base.IPi, parexsol.SCLCstats.mu_MG_maxgrad(1,:), '-o');
+%             xlabel('Fermi-IP offset [eV]')
+%             ylabel('Calculated mobility [cm2V-1s-1]')
+%             ylim([0,2.2])
+%             xlim([parexsol.parval2(1)-parexsol.par_base.IPi, parexsol.parval2(end)-parexsol.par_base.IPi])
+        end
+        
+        
+        function plotmu_MG(parexsol)
+            
+            figure(007)
+            surf(parexsol.parval1, parexsol.parval2, squeeze(parexsol.SCLCstats.mu_MG(:,1,:)))
+            s1 = gca;
+            title('mu MG')
+            xlim([parexsol.parval1(1,1) parexsol.parval1(1,end)])
+            ylim([parexsol.parval2(1,1) parexsol.parval2(1,end)])
+            xlabel(parexsol.parnames{1,1})
+            ylabel(parexsol.parnames{1,2})
+            zlabel('Calculated mobility [cm2V-1s-1]')
+%             set(s1,'XScale','log');
+            set(s1,'YScale','log');
+%             set(s1,'ZScale','log');
+            shading interp
+            cb = colorbar();
+%             cb.Ruler.Scale = 'log';
+            cb.Ruler.MinorTick = 'on';
+%            caxis([1e-10, 1])            
+%            xlim([parexsol.parval2(1)-parexsol.par_base.IPi, parexsol.parval2(end)-parexsol.par_base.IPi])
+%             
+%             figure(3004)
+%             semilogy(parexsol.parval2-parexsol.par_base.IPi, parexsol.SCLCstats.mu_MG_maxgrad(1,:), '-o');
+%             xlabel('Fermi-IP offset [eV]')
+%             ylabel('Calculated mobility [cm2V-1s-1]')
+%             ylim([0,2.2])
+%             xlim([parexsol.parval2(1)-parexsol.par_base.IPi, parexsol.parval2(end)-parexsol.par_base.IPi])
+        end
+        
+         function plotmu_MG_MaxGrad(parexsol)
+            
+            figure(006)
+            surf(parexsol.parval1, parexsol.parval2, parexsol.SCLCstats.mu_MG_maxgrad)
+            s1 = gca;
+            title('mu MG at MaxGrad')
+            xlim([parexsol.parval1(1,1) parexsol.parval1(1,end)])
+            ylim([parexsol.parval2(1,1) parexsol.parval2(1,end)])
+            xlabel(parexsol.parnames{1,1})
+            ylabel(parexsol.parnames{1,2})
+            zlabel('Calculated mobility [cm2V-1s-1]')
+%             set(s1,'XScale','log');
+            set(s1,'YScale','log');
+%             set(s1,'ZScale','log');
+            shading interp
+            cb = colorbar();
+%             cb.Ruler.Scale = 'log';
+            cb.Ruler.MinorTick = 'on';
+%            caxis([1e-10, 1])            
+%            xlim([parexsol.parval2(1)-parexsol.par_base.IPi, parexsol.parval2(end)-parexsol.par_base.IPi])
+%             
+%             figure(3004)
+%             semilogy(parexsol.parval2-parexsol.par_base.IPi, parexsol.SCLCstats.mu_MG_maxgrad(1,:), '-o');
+%             xlabel('Fermi-IP offset [eV]')
+%             ylabel('Calculated mobility [cm2V-1s-1]')
+%             ylim([0,2.2])
+%             xlim([parexsol.parval2(1)-parexsol.par_base.IPi, parexsol.parval2(end)-parexsol.par_base.IPi])
+        end
+        
+        function plot_MaxGrad(parexsol)
+            
+            figure(008)
+            surf(parexsol.parval1, parexsol.parval2,  parexsol.SCLCstats.max_gradJV);
+            s1 = gca;
+            title('MaxGrad')
+            xlim([parexsol.parval1(1,1) parexsol.parval1(1,end)])
+            ylim([parexsol.parval2(1,1) parexsol.parval2(1,end)])
+            xlabel(parexsol.parnames{1,1})
+            ylabel(parexsol.parnames{1,2})
+            zlabel('Max Gradient of log(J)/log(V)')
+%             set(s1,'XScale','log');
+            set(s1,'YScale','log');
+%             set(s1,'ZScale','log');
+            shading interp
+            cb = colorbar();
+%             cb.Ruler.Scale = 'log';
             cb.Ruler.MinorTick = 'on';
 %            caxis([1e-10, 1])            
 %            xlim([parexsol.parval2(1)-parexsol.par_base.IPi, parexsol.parval2(end)-parexsol.par_base.IPi])

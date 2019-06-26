@@ -59,6 +59,11 @@ SCLCstats.max_gradJV = max(gradJV);
 pp = find(gradJV <= max(gradJV));
 pp = pp(end);
 SCLCstats.mu_MG_maxgrad = mu_MG(pp);
-SCLCstats.delta_mu = mu_MG - par.mue(layernum);
+SCLCstats.delta_mue = mu_MG - par.mue(layernum);
+SCLCstats.delta_muh = mu_MG - par.muh(layernum);
+
+nn = find (1.8 <= gradJV & gradJV <= 2.2); 
+SCLCstats.gradJV2 = gradJV(nn); 
+SCLCstats.mu_MG_GRAD2 = mu_MG(nn) ;   
 
 end

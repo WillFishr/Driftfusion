@@ -40,14 +40,11 @@ classdef pc
         % defined by the property DINT and number of points defined by
         % PINT.
 
-        dcell = {{2e-7, 30e-7, 2e-7}; {2e-7, 450e-7, 30e-7}; {2e-7, 30e-7, 2e-7}};         % Layer and subsection thickness array
-        pcell = {{30, 225, 30}; {30, 225, 30}; {30, 225, 30}};                          % Number of points in layers and subsections array  
-        dint = 4e-7;        % Interfacial region thickness (x_mesh_type = 3)
-        pint = 40;          % Interfacial points (x_mesh_type = 3)
 
-        dcell = {{50e-7}; {30e-7, 450e-7, 30e-7}; {60e-7}};         % Layer and subsection thickness array  
-        pcell = {{50}; {30, 225, 30}; {60}};                          % Number of points in layers and subsections array  
-        dint = 2e-7;        % Interfacial region thickness (x_mesh_type = 3)
+
+        dcell = {{0e-7}; {5e-7, 400e-7, 5e-7}; {0e-7}};         % Layer and subsection thickness array  
+        pcell = {{0}; {10, 400, 10}; {0}};                          % Number of points in layers and subsections array  
+        dint = 5e-7;        % Interfacial region thickness (x_mesh_type = 3)
         pint = 20;          % Interfacial points (x_mesh_type = 3)
 
         
@@ -106,16 +103,16 @@ classdef pc
         % library. The names here do not influence the electrical properties of the
         % device. See INDEX OF REFRACTION LIBRARY for choices- names must be enetered 
         % exactly as given in the column headings with the '_n', '_k' omitted
-        stack = {'PCBM', 'MAPI', 'PCBM'}
+        stack = {'nothing', 'MAPI', 'nothing'}
         %stack = {'PEDOT','MAPICl','PTAA'}
         %% Energy levels [eV] 
-        EA = [-3.7, -3.8, -3.7];           % Electron affinity
-        IP = [-6.1, -5.3, -6.1];           % Ionisation potential
+        EA = [-3.8, -3.8, -3.8];           % Electron affinity
+        IP = [-5.3, -5.3, -5.3];           % Ionisation potential
         % PCBM: Sigma Aldrich https://www.sigmaaldrich.com/technical-documents/articles/materials-science/organic-electronics/pcbm-n-type-semiconductors.html 
         % Also: https://www.sigmaaldrich.com/catalog/product/ALDRICH/684449?lang=en&region=GB
         %% Equilibrium Fermi energies [eV]
         % These define the doping density in each layer- see NA and ND calculations in methods         
-        E0 = [-4.3, -4.55, -4.3];   
+        E0 = [-4.55, -4.55, -4.55];   
         
         % n-type PCBM https://www.researchgate.net/publication/260714083_The_band_energy_diagram_of_PCBM-DH6T_bulk_heterojunction_solar_cells_Synchrotron-induced_photoelectron_spectroscopy_on_solution_processed_DH6TPCBM_blends_and_in_situ_prepared_PCBMDH6T_interfaces
        
@@ -123,7 +120,7 @@ classdef pc
         % These must exist within the energy gap of the appropriate layers
         % and define the variables PT and NT in the expression:
         % U = (np-ni^2)/(taun(p+pt) +taup(n+nt))
-        Et_bulk =[-4.9, -4.55, -4.9];
+        Et_bulk =[-4.55, -4.55, -4.55];
         
         %% Electrode Fermi energies [eV]
         % Fermi energies of the metal electrode. These define the built-in voltage, Vbi 
@@ -147,7 +144,7 @@ classdef pc
         
         %% Mobile ions
         % Mobile ion defect density [cm-3] 
-        Nion = [0, 1e18, 0];                % A. Walsh et al. Angewandte Chemie, 2015, 127, 1811.     
+        Nion = [1, 1e18, 1];                % A. Walsh et al. Angewandte Chemie, 2015, 127, 1811.     
         %Nion = [0, 1e18, 0];
         % Approximate density of iodide sites [cm-3]
         % Limits the density of iodide vancancies
@@ -212,7 +209,7 @@ classdef pc
         
         %% Current voltage scan parameters
         Vstart = 0;             % Initial scan point
-        Vend = 1.2;             % Final scan point
+        Vend = 1.5;             % Final scan point
         JVscan_rate = 1;        % JV scan rate (Vs-1)
         JVscan_pnts = 100;      % JV scan points
         

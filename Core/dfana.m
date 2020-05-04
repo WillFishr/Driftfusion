@@ -260,6 +260,7 @@ classdef dfana
                     deltaja = cumtrapz(x, djadx, 2);
                     deltajc = cumtrapz(x, djcdx, 2);
             end
+            
             %% Currents from the boundaries
             switch par.BC
                 case 2
@@ -289,7 +290,7 @@ classdef dfana
             elseif par.pleft >= par.nleft && par.pright >= par.nright...
                     || par.nleft >= par.pleft && par.nright >= par.pright
                 % p-type both boundaries or n-type both boundaries
-                j.n = jp_l + deltajn;
+                j.n = jn_l + deltajn;
                 j.p = jp_l + deltajp;
             end
             

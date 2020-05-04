@@ -119,9 +119,37 @@ classdef dfplot
             %ylim([-30e-3, 10e-3]);
             xlabel('Applied voltage [V]')
             ylabel('Current density [Acm-2]');
-            hold off
+            hold on
             
         end
+        
+        function JVSCLC(JV)
+            % JV - a solution from doJV
+            % Dark only,SCLC plot and analysis is only valid for Dark Scans
+            
+           
+                J.dk.f = dfana.calcJ(JV.dk.f);
+                Vapp.dk.f = dfana.calcVapp(JV.dk.f);
+                J.dk.r = dfana.calcJ(JV.dk.r);
+                Vapp.dk.r = dfana.calcVapp(JV.dk.r);
+                
+                SCLCgradf = gradient(log(J.dk.f.tot(:,end)))./gradient(log(Vapp.dk.f'));
+                SCLCgradr = gradient(log(J.dk.r.tot(:,end)))./gradient(log(Vapp.dk.r'));
+                
+                figure(20)
+                plot(Vapp.dk.f, SCLCgradf, '--', Vapp.dk.r, SCLCgradr);
+                hold on
+            
+            
+            
+            figure(20)
+            %ylim([-30e-3, 10e-3]);
+            xlabel('Applied voltage [V]')
+            ylabel('SCLC gradient');
+            hold on
+            
+        end
+        
         
         function Jddx(varargin)
             % figure(5)

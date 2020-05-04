@@ -15,8 +15,19 @@
 
 % Create parameters objects for Spiro/MAPI/TiO2 and PEDOT/MAPI/PCBM devices
 prompt = ('Please select the input file you wish to analyse');
-FileName = string(uigetfile('C:\matlab\Phil_GitHub_Code\Driftfusion\Driftfusion_Will\Input_files\*.csv'));
-Ncat=  [1e12 1e14 1e16 1e18 1e20];
+FileName = string(uigetfile('/Users/Will/Documents/MATLAB/GitHub/Driftfusion/Input_files/.csv'));
+
+%define the parameter(s) you wish to vary 
+% Phi_left = [-3.8 -3.9 -4.0];      
+% Phi_right = Phi_left;
+% 
+% paramvar = Phi_left;
+
+Ncat=  [1e0 1e15 1e18 1e21];
+Nani = Ncat;
+
+paramvar = Ncat;
+
 % Ncatstr = cell(1,size(Ncat,2)) ;
 % Ncatstr(:) = [NaN] ;
 % NcatstrMG = cell(1,size(Ncat,2)) ;
@@ -24,24 +35,29 @@ Ncat=  [1e12 1e14 1e16 1e18 1e20];
 % NcatstrOhm = cell(1,size(Ncat,2)) ;
 % NcatstrOhm(:) = [NaN] ;
 
-for k=1:size(Ncat,2)
+for k=1:size(paramvar,2)
 
-par = pc(FileName);    
-    
-par.Ncat = Ncat(k);
-par.Nani = 1;
-Ncatstr{k} = num2str(Ncat(k),'%10.3e\n');
+par = pc(FileName);
+
+%Define your parameter to vary. 
+
+par.Ncat = paramvar(k);
+par.Nani = paramvar(k);
+% par.Phi_left = paramvar(k);             
+% par.Phi_right = paramvar(k);              
+
+Paramvarstr{k} = num2str(paramvar(k),'%10.3e\n');
 % par.mue = mue(k);
 % par.muh = mue(k);
 % Ncatstr{k} = num2str(mue(k),'%10.3e\n');
 
 % Find equilibrium solutions
-soleq{1,k} = Ncatstr{k};
+soleq{1,k} = Paramvarstr{k};
 soleq{2,k} = equilibrate(par);
 
 
 % Perform a current voltage scan with frozen ions to 100V
-JV{1,k} = Ncatstr{k};
+JV{1,k} = Paramvarstr{k};
 JV{2,k} = doJV(soleq{2,k}.ion, 1, 1000, 0, 0, 0, 50, 1);
 
 
@@ -96,9 +112,11 @@ dfplot.JVSCLC(JV{2,k})
 % figure(10)
 % hold on
  
+MGtot(:,k) = MG;
+Ohmtot(:,k) = Ohm;  
  
 figure(200)
-plot(Vapp, MG,'.-','LineWidth',1,'MarkerSize',10)%,'DisplayName',NcatstrMG) 
+plot(Vapp, MGtot(:,k),'.-','LineWidth',1,'MarkerSize',10)%,'DisplayName',NcatstrMG) 
 set(gca,'FontSize',16)
 xlabel('Vapp')
 ylabel('MG Mobility [cm^2 V^-1 s^-1]')
@@ -108,7 +126,7 @@ grid on
 hold on 
  
 figure(201)
-plot(Vapp,Ohm,'.-','LineWidth',1,'MarkerSize',10)%,'DisplayName', NcatstrOhm)
+plot(Vapp,Ohmtot(:,k),'.-','LineWidth',1,'MarkerSize',10)%,'DisplayName', NcatstrOhm)
 set(gca,'FontSize',16)
 xlabel('Vapp')
 ylabel('Ohmic Conductivity [J V^-1]')

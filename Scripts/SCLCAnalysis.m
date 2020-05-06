@@ -23,7 +23,7 @@ FileName = string(uigetfile('/Users/Will/Documents/MATLAB/GitHub/Driftfusion/Inp
 % 
 % paramvar = Phi_left;
 
-Ncat=  [1e0 1e15 1e18 1e21];
+Ncat=  [1e13 1e16 1e17 1e18 1e19];
 Nani = Ncat;
 
 paramvar = Ncat;
@@ -43,6 +43,14 @@ par = pc(FileName);
 
 par.Ncat = paramvar(k);
 par.Nani = paramvar(k);
+par.dev.Ncat(1,:) = paramvar(k);
+par.dev.Nani(1,:) = paramvar(k);
+par.dev_ihalf.Ncat(1,:) = paramvar(k);
+par.dev_ihalf.Nani(1,:) = paramvar(k);
+
+
+par.cmax=1e3.*Ncat(k);
+par.amax=1e3.*Nani;
 % par.Phi_left = paramvar(k);             
 % par.Phi_right = paramvar(k);              
 
@@ -62,8 +70,7 @@ JV{2,k} = doJV(soleq{2,k}.ion, 1, 1000, 0, 0, 0, 50, 1);
 
 
 %% ANALYSIS %%
-
-   % Call dfana to obtain band energies and QFLs for this worksapce           
+% Call dfana to obtain band energies and QFLs for this worksapce           
 [Jf,jf,xf] = dfana.calcJ(JV{2,k}.dk.f);
 [Jr,jr,xr] = dfana.calcJ(JV{2,k}.dk.r);
             

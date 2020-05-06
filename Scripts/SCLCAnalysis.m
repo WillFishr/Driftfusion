@@ -23,7 +23,7 @@ FileName = string(uigetfile('/Users/Will/Documents/MATLAB/GitHub/Driftfusion/Inp
 % 
 % paramvar = Phi_left;
 
-Ncat=  [1e13 1e16 1e17 1e18 1e19];
+Ncat=  [1e13,1e18];
 Nani = Ncat;
 
 paramvar = Ncat;
@@ -43,14 +43,13 @@ par = pc(FileName);
 
 par.Ncat = paramvar(k);
 par.Nani = paramvar(k);
-par.dev.Ncat(1,:) = paramvar(k);
-par.dev.Nani(1,:) = paramvar(k);
-par.dev_ihalf.Ncat(1,:) = paramvar(k);
-par.dev_ihalf.Nani(1,:) = paramvar(k);
-
-
-par.cmax=1e3.*Ncat(k);
-par.amax=1e3.*Nani;
+par = refresh_device(par);
+% par.dev.Ncat(1,:) = paramvar(k);
+% par.dev.Nani(1,:) = paramvar(k);
+% par.dev_ihalf.Ncat(1,:) = paramvar(k);
+% par.dev_ihalf.Nani(1,:) = paramvar(k);
+% par.cmax=1e3.*Ncat(k);
+% par.amax=1e3.*Nani;
 % par.Phi_left = paramvar(k);             
 % par.Phi_right = paramvar(k);              
 
@@ -76,52 +75,52 @@ JV{2,k} = doJV(soleq{2,k}.ion, 1, 1000, 0, 0, 0, 50, 1);
             
  Jtotf = Jf.tot(:,end);
  Jtotr = Jr.tot(:,end);
- Jtot = [Jtotf; Jtotr];  
+ Jtot = [Jtotf; Jtotr]; 
+ lgJtot = log(abs(Jtot));
  Vappf = (dfana.calcVapp(JV{2,k}.dk.f))';
  Vappr = (dfana.calcVapp(JV{2,k}.dk.r))';
  Vapp = [Vappf; Vappr];
+ lgVapp = log(Vapp);
  gradJV = gradient(log(Jtot))./gradient(log(Vapp));
  
  MaxGrad = max(gradJV);
+ MaxGrad_loc = find(gradJV==MaxGrad);
 %  MaxGrad = sprintf('Max Grad is %.4f',MaxGrad);
 %     disp(MaxGrad)
 
 MG= NaN(size(Vapp));               %Prealocate MG and Ohm yo have the same size as Vapp but to have NaN where the analysis condition is not satisfied
 Ohm = NaN(size(Vapp));
-
-count1 = 1;
-count2 = 1;
- 
+% 
+% count1 = 1;
+% count2 = 1;
+%  
  for i=1:size(gradJV)
      
-     if gradJV(i)>1.6 && gradJV(i)<2.3
+     if gradJV(i)>1.65 && gradJV(i)<2.3
          
          MG(i,1) = ((Jtot(i,:))./((Vapp(i,:).^2))).*(8./9).*((par.d.^3)./(par.epp.*par.epp0.*par.e));                   
          %NcatstrMG{count1,1} = Ncatstr{k};
-         count1= count1+1;
+%          count1= count1+1;
          
      elseif gradJV(i)<1.3 && gradJV(i)>0.7
          
-         Ohm(i,1) = (Jtot(i,:))./(Vapp(i,:));
+         Ohm(i,1) = ((Jtot(i,:))./(Vapp(i,:))).*par.d;
          %NcatstrOhm{count2,1} = Ncatstr{k};
-         count2= count2+1;  
+%          count2= count2+1;  
          
      end 
- end 
+ end
+
+MGtot(:,k) = MG;
+Ohmtot(:,k) = Ohm;  
  
+MG_muexp1=((Jtot(MaxGrad_loc,:))./((Vapp(MaxGrad_loc,:).^2))).*(8./9).*((par.d.^3)./(par.epp.*par.epp0.*par.e));
+logfit = fit(lgVapp,lgJtot,'poly1');
+
 % plot the current voltage curve
 dfplot.JV(JV{2,k},1)
 dfplot.JVSCLC(JV{2,k})
 
-% figure(4)
-% hold on
-% 
-% figure(10)
-% hold on
- 
-MGtot(:,k) = MG;
-Ohmtot(:,k) = Ohm;  
- 
 figure(200)
 plot(Vapp, MGtot(:,k),'.-','LineWidth',1,'MarkerSize',10)%,'DisplayName',NcatstrMG) 
 set(gca,'FontSize',16)
@@ -139,6 +138,14 @@ xlabel('Vapp')
 ylabel('Ohmic Conductivity [J V^-1]')
 title('Ohmic Conductivity')
 legend('show')
+grid on
+hold on 
+
+figure(210)
+plot(lgVapp, lgJtot,'.-','LineWidth',1,'MarkerSize',10)
+xlabel('log(Vapp)')
+ylabel('log(J)')
+title('Typical analysis of experimental SCLC data')
 grid on
 hold on 
 

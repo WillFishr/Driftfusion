@@ -18,15 +18,19 @@ prompt = ('Please select the input file you wish to analyse');
 FileName = string(uigetfile('/Users/Will/Documents/MATLAB/GitHub/Driftfusion/Input_files/.csv'));
 
 %define the parameter(s) you wish to vary 
-% Phi_left = [-3.8 -3.9 -4.0];      
-% Phi_right = Phi_left;
-% 
-% paramvar = Phi_left;
+Phi_left = [-5.35 -5.3 -5.25 -5.2];      
+Phi_right = Phi_left;
 
-Ncat=  [1e13,1e18];
-Nani = Ncat;
+paramvar = Phi_left;
 
-paramvar = Ncat;
+% V_prebias = [-8 -6 -4 -2 -0.5 0.5 2 4 6 8];
+% paramvar= V_prebias;
+
+% Ncat = [1e13,1e16,1e17,1e18,1e19]; 
+%Ncat=  [1e5,1e12,1e13,1e14,1e15,1e16,1e17,1e18,1e19,1e20];
+% Nani = Ncat;
+
+% paramvar = Ncat;
 
 % Ncatstr = cell(1,size(Ncat,2)) ;
 % Ncatstr(:) = [NaN] ;
@@ -37,21 +41,18 @@ paramvar = Ncat;
 
 for k=1:size(paramvar,2)
 
+    identifier = 0;
+    
 par = pc(FileName);
 
 %Define your parameter to vary. 
 
-par.Ncat = paramvar(k);
-par.Nani = paramvar(k);
+% par.Ncat = paramvar(k);
+% par.Nani = paramvar(k);
+par.Phi_left = paramvar(k);             
+par.Phi_right = paramvar(k);              
 par = refresh_device(par);
-% par.dev.Ncat(1,:) = paramvar(k);
-% par.dev.Nani(1,:) = paramvar(k);
-% par.dev_ihalf.Ncat(1,:) = paramvar(k);
-% par.dev_ihalf.Nani(1,:) = paramvar(k);
-% par.cmax=1e3.*Ncat(k);
-% par.amax=1e3.*Nani;
-% par.Phi_left = paramvar(k);             
-% par.Phi_right = paramvar(k);              
+
 
 Paramvarstr{k} = num2str(paramvar(k),'%10.3e\n');
 % par.mue = mue(k);
@@ -62,10 +63,21 @@ Paramvarstr{k} = num2str(paramvar(k),'%10.3e\n');
 soleq{1,k} = Paramvarstr{k};
 soleq{2,k} = equilibrate(par);
 
-
+Conductance_eq(k) = 1./(trapz(par.xx,1./(par.e.*(soleq{2,k}.ion.u(end,:,2).*par.mue + soleq{2,k}.ion.u(end,:,3).*par.muh))));
+ 
+% sol_prebias{1,k} = Paramvarstr{k};
+% sol_prebias{2,k} = jumptoV(soleq{2,k}.ion, paramvar(k), 1000, 1, 0, 1, 0);
+% Conductance_prebias(k) =  (1./(trapz(par.xx,1./(par.e.*(sol_prebias{2,k}.u(end,:,2).*par.mue + sol_prebias{2,k}.u(end,:,3).*par.muh)))));
+% 
+% figure(2)
+% hold on 
+% scantoJV{1,k} = doJV(sol_prebias{2,k},0.1,500,0,0,paramvar(k),0,1);
+% Conductance_prebias0V(k) =  (1./(trapz(par.xx,1./(par.e.*(scantoJV{1,k}.dk.f.u(end,:,2).*par.mue + scantoJV{1,k}.dk.f.u(end,:,3).*par.muh)))));
 % Perform a current voltage scan with frozen ions to 100V
+
 JV{1,k} = Paramvarstr{k};
-JV{2,k} = doJV(soleq{2,k}.ion, 1, 1000, 0, 0, 0, 50, 1);
+JV{2,k} = doJV(soleq{2,k}.ion, 1, 1250, 0, 0, 0, 100, 1);
+% JV{2,k} = doJV(scantoJV{1,k}.dk.f, 1, 2500, 0, 0, 0, 50, 1);
 
 
 %% ANALYSIS %%
@@ -75,12 +87,17 @@ JV{2,k} = doJV(soleq{2,k}.ion, 1, 1000, 0, 0, 0, 50, 1);
             
  Jtotf = Jf.tot(:,end);
  Jtotr = Jr.tot(:,end);
- Jtot = [Jtotf; Jtotr]; 
- lgJtot = log(abs(Jtot));
+ Jtot = Jtotf;
+%  Jtot = [Jtotf; Jtotr]; 
+ lgJtot = log(Jtot);
+ lgJtot([1 end],:) = [];
  Vappf = (dfana.calcVapp(JV{2,k}.dk.f))';
  Vappr = (dfana.calcVapp(JV{2,k}.dk.r))';
- Vapp = [Vappf; Vappr];
+ Vapp = Vappf; 
+ %  Vapp = [Vappf; Vappr];
  lgVapp = log(Vapp);
+ lgVapp([1 end],:) = [];
+ gradJV = [];
  gradJV = gradient(log(Jtot))./gradient(log(Vapp));
  
  MaxGrad = max(gradJV);
@@ -90,21 +107,23 @@ JV{2,k} = doJV(soleq{2,k}.ion, 1, 1000, 0, 0, 0, 50, 1);
 
 MG= NaN(size(Vapp));               %Prealocate MG and Ohm yo have the same size as Vapp but to have NaN where the analysis condition is not satisfied
 Ohm = NaN(size(Vapp));
+Conductance_V = NaN(size(Vapp));
 % 
-% count1 = 1;
+count1 = 1;
 % count2 = 1;
 %  
  for i=1:size(gradJV)
      
-     if gradJV(i)>1.65 && gradJV(i)<2.3
+     if gradJV(i)>1.65 && gradJV(i)<2.35
          
-         MG(i,1) = ((Jtot(i,:))./((Vapp(i,:).^2))).*(8./9).*((par.d.^3)./(par.epp.*par.epp0.*par.e));                   
+         MG(i,1) = ((Jtot(i,:))./((Vapp(i,:).^2))).*(8./9).*(((par.d).^3)./(par.epp.*par.epp0.*par.e));                   
          %NcatstrMG{count1,1} = Ncatstr{k};
 %          count1= count1+1;
+     end    
+     if gradJV(i)< 2.2 && gradJV(i)>0.7
          
-     elseif gradJV(i)<1.3 && gradJV(i)>0.7
-         
-         Ohm(i,1) = ((Jtot(i,:))./(Vapp(i,:))).*par.d;
+         Ohm(i,1) = ((Jtot(i,:))./(Vapp(i,:)));
+         Conductance_V(i,1) = 1./(trapz(par.xx,1./(par.e.*(JV{2,k}.dk.f.u(i,:,2).*par.mue + JV{2,k}.dk.f.u(i,:,3).*par.muh))));       
          %NcatstrOhm{count2,1} = Ncatstr{k};
 %          count2= count2+1;  
          
@@ -113,9 +132,44 @@ Ohm = NaN(size(Vapp));
 
 MGtot(:,k) = MG;
 Ohmtot(:,k) = Ohm;  
+ConductanceVtot(:,k) = Conductance_V;
  
-MG_muexp1=((Jtot(MaxGrad_loc,:))./((Vapp(MaxGrad_loc,:).^2))).*(8./9).*((par.d.^3)./(par.epp.*par.epp0.*par.e));
-logfit = fit(lgVapp,lgJtot,'poly1');
+MG_muexp1(k)=((Jtot(MaxGrad_loc,:))./((Vapp(MaxGrad_loc,:).^2))).*(8./9).*(((par.d).^3)./(par.epp.*par.epp0.*par.e));
+ 
+for t=1:size(gradJV)
+     
+     if gradJV(t)>1.65 && gradJV(t)<2.35 && gradJV(t)>gradJV(t-1)
+        
+        identifier = 1;
+         
+        MGregionlgJ(count1) = lgJtot(t);
+        MGregionlgV(count1) = lgVapp(t);
+        count1 = count1 + 1; 
+        %calcualte the mobilities from the gradients of the grad and create
+        %strings of the equations to add as labels to the graphs .
+     end 
+end
+
+        if identifier == 1
+
+            logfit = fit(MGregionlgV',MGregionlgJ','poly1');
+            fitcoefficients{1,k} = logfit.p1;
+            fitcoefficients{2,k} = logfit.p2; 
+            Mulogfit(k) = (8.*(par.d).^3).*exp(fitcoefficients{2,k})./(9.*par.epp.*par.epp0.*par.e);
+            mstring = num2str(fitcoefficients{1,k});
+            intstring = num2str(fitcoefficients{2,k});
+            eqlabel{k} = (['log(J) = ' mstring 'log(V) + ' intstring]);
+            
+        else 
+            
+            fitcoefficients{1,k} = NaN;
+            fitcoefficients{2,k} = NaN; 
+            Mulogfit(k) = NaN;
+            mstring = num2str(NaN);
+            intstring = num2str(NaN);
+            eqlabel{k} = (['log(J) = ' mstring 'log(V) + ' intstring]);
+
+        end
 
 % plot the current voltage curve
 dfplot.JV(JV{2,k},1)
@@ -126,23 +180,30 @@ plot(Vapp, MGtot(:,k),'.-','LineWidth',1,'MarkerSize',10)%,'DisplayName',Ncatstr
 set(gca,'FontSize',16)
 xlabel('Vapp')
 ylabel('MG Mobility [cm^2 V^-1 s^-1]')
-title('Mott-Gurney Mobilitiy (set at 20)') 
+title('Mott-Gurney Mobility (set at 20)') 
 legend('show')
 grid on
 hold on 
  
 figure(201)
 plot(Vapp,Ohmtot(:,k),'.-','LineWidth',1,'MarkerSize',10)%,'DisplayName', NcatstrOhm)
+hold on
 set(gca,'FontSize',16)
+plot(Vapp,ConductanceVtot(:,k),'--','LineWidth',1,'MarkerSize',10)
 xlabel('Vapp')
-ylabel('Ohmic Conductivity [J V^-1]')
-title('Ohmic Conductivity')
+ylabel('Ohmic Conductance [J V^-1]')
+title('Ohmic Conductance')
 legend('show')
 grid on
 hold on 
 
+y=fitcoefficients{1,k}.*lgVapp + fitcoefficients{2,k};
+
 figure(210)
-plot(lgVapp, lgJtot,'.-','LineWidth',1,'MarkerSize',10)
+plot(lgVapp, lgJtot,'.','LineWidth',1,'MarkerSize',10);
+hold on 
+plot(lgVapp,y,'-','LineWidth',1,'MarkerSize',10);
+legend('show')
 xlabel('log(Vapp)')
 ylabel('log(J)')
 title('Typical analysis of experimental SCLC data')
@@ -153,5 +214,5 @@ mu_MG(k) = nanmean(MG);
 G(k)= nanmean(Ohm);
 
 
+end
 
-end 

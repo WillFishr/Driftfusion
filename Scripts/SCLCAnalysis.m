@@ -18,18 +18,23 @@ prompt = ('Please select the input file you wish to analyse');
 FileName = string(uigetfile('/Users/Will/Documents/MATLAB/GitHub/Driftfusion/Input_files/.csv'));
 
 %define the parameter(s) you wish to vary 
-% Phi_left = [-5.4 -5.35 -5.3 -5.25 -5.2];      
+% Phi_left = [-5.4 -5.375 -5.35 -5.325 -5.3 -5.25 -5.2 -5.15];      
 % Phi_right = Phi_left;
 % 
 % paramvar = Phi_left;
 
-V_prebias = [0.1 0.2];%[-6 -5 -4 -3 -2 -1 -0.8 -0.6 -0.4 -0.3 -0.25 -0.2 -0.15 -0.1 -0.05 -0.025 0.025 0.05 0.1 0.15 0.2 0.25 0.3 0.4 0.6 0.8 1 2 3 4 5 6];
+% d = [1e-4 7.5e-5 5e-5 2.5e-5 1e-5 7.5e-6 5e-6];
+% paramvar = d;
+% density = 50/4e-5;
+
+% V_prebias = [0.1 1];
+V_prebias = [-6 -5 -4 -3 -2 -1 -0.8 -0.6 -0.4 -0.3 -0.25 -0.2 -0.15 -0.1 -0.05 -0.025 0.025 0.05 0.1 0.15 0.2 0.25 0.3 0.4 0.6 0.8 1 2 3 4 5 6];
 paramvar= V_prebias;
 
 % Ncat = [1e13,1e15,1e16,1e17,1e18,1e19]; 
 % Ncat=  [1e5,1e12,1e13,1e14,1e15,1e16,1e17,1e18,1e19,1e20];
 % Nani = Ncat;
-% 
+
 % paramvar = Ncat;
 
 % Ncatstr = cell(1,size(Ncat,2)) ;
@@ -46,11 +51,14 @@ for k=1:size(paramvar,2)
 par = pc(FileName);
 
 %Define your parameter to vary. 
-% 
-% par.Ncat([1 3 5]) = paramvar(k);
-% par.Nani([1 3 5]) = paramvar(k);
+
+% par.Ncat = paramvar(k);
+% par.Nani = paramvar(k);
 % par.Phi_left = paramvar(k);             
-% par.Phi_right = paramvar(k);              
+% par.Phi_right = paramvar(k);
+% par.d = paramvar(k);
+% par.layer_points = 200;
+% par.layer_points = round(min([200 density*paramvar(k)]));
 par = refresh_device(par);
 
 
@@ -64,20 +72,21 @@ soleq{1,k} = Paramvarstr{k};
 soleq{2,k} = equilibrate(par);
 
 Conductance_eq(k) = 1./(trapz(par.xx,1./(par.e.*(soleq{2,k}.ion.u(end,:,2).*par.mue + soleq{2,k}.ion.u(end,:,3).*par.muh))));
- 
-sol_prebias{1,k} = Paramvarstr{k};
+%  
+% sol_prebias{1,k} = Paramvarstr{k};
 sol_prebias{2,k} = jumptoV(soleq{2,k}.ion, paramvar(k), 1000, 1, 0, 1, 0);
 Conductance_prebias(k) =  (1./(trapz(par.xx,1./(par.e.*(sol_prebias{2,k}.u(end,:,2).*par.mue + sol_prebias{2,k}.u(end,:,3).*par.muh)))));
 
 figure(2)
 hold on 
 scantoJV{1,k} = doJV(sol_prebias{2,k},0.1,500,0,0,paramvar(k),0,1);
+% prebias_0V{1,k} = stabilize(scantoJV{1,k}.dk.f);
 Conductance_prebias0V(k) =  (1./(trapz(par.xx,1./(par.e.*(scantoJV{1,k}.dk.f.u(end,:,2).*par.mue + scantoJV{1,k}.dk.f.u(end,:,3).*par.muh)))));
 % Perform a current voltage scan with frozen ions to 100V
 
 JV{1,k} = Paramvarstr{k};
-% JV{2,k} = doJV(soleq{2,k}.ion, 1, 1250, 0, 0, 0, 100, 1);
-JV{2,k} = doJV(scantoJV{1,k}.dk.f, 1, 2500, 0, 0, 0, 50, 1);
+JV{2,k} = doJV(soleq{2,k}.ion, 1, 2000, 0, 0, 0, 100, 1);
+% JV{2,k} = doJV(scantoJV{1,k}.dk.f, 1, 2500, 0, 0, 0, 50, 1);
 
 
 %% ANALYSIS %%

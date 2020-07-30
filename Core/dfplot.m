@@ -137,7 +137,7 @@ classdef dfplot
                 SCLCgradr = gradient(log(J.dk.r.tot(:,end)))./gradient(log(Vapp.dk.r'));
                 
                 figure(20)
-                plot(Vapp.dk.f, SCLCgradf, '--', Vapp.dk.r, SCLCgradr);
+                semilogx(Vapp.dk.f, SCLCgradf, '--', Vapp.dk.r, SCLCgradr);
                 hold on
             
             
@@ -410,6 +410,41 @@ classdef dfplot
             legend('Illumated for', 'Illumated rev','Jrec,btb for','Jrec,btb rev'...
                 ,'Jrec,srh-int for','Jrec,srh-int rev','Jrec,srh-bulk for','Jrec,srh-bulk rev')
         end
+        
+        function Fx(varargin)
+            
+            % Plots the currents
+            % SOL = the solution structure
+            % TARR = An array containing the times that you wish to plot
+            % XRANGE = 2 element array with [xmin, xmax]
+            [sol, tarr, pointtype, xrange] = dfplot.sortarg(varargin);
+            [u,t,x,par,dev,n,p,a,c,V] = dfana.splitsol(sol);
+            [FV,Frho] = dfana.calcF(sol);
+            
+                
+                for i = 1:length(tarr)
+                
+                 p1 = find(sol.t <= tarr(i));
+                 p1 = p1(end);
+                 FVplot = FV(p1,:);
+                 Frhoplot = Frho(p1,:);
+                 
+                end 
+       
+            xnm = x.*1e9;
+            
+            figure(300);
+            plot(xnm,FVplot)
+            hold on 
+            plot(xnm,Frhoplot)
+            legend('Electric field calcualted from potential','Electric field calculated from space-charge')
+            xlabel('Position (nm)')
+            ylabel('Electric Field (V/m)')
+            xlim([xrange(1), xrange(2)])
+            hold off
+           
+        end 
+         
         
         function Ft(sol, xpos)
             % Absolute field strength F as a function of time at point
@@ -685,7 +720,6 @@ classdef dfplot
             end
             par = sol.par;
             xnm = xmesh*1e7;
-            
             vmin = min(min(cell2mat(variables)));
             vmax = max(max(cell2mat(variables)));
             

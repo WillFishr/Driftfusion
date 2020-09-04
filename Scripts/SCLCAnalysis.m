@@ -23,14 +23,18 @@ FileName = string(uigetfile('/Users/Will/Documents/MATLAB/GitHub/Driftfusion/Inp
 % 
 % paramvar = Phi_left;
 
-% d = [1e-4 5e-5 2.5e-5 1e-5 7.5e-6 5e-6];
+% d = [10e-4 5e-4];
 % paramvar = d;
 % density = 200/1e-5;
 
+scanrate = [0.01 0.1 1 10 100];
+paramvar = scanrate;
+
+
 % V_prebias = [0.1];% 1];
-V_prebias = [-6 -5 -4 -3 -2 -1 -0.8 -0.6 -0.4 -0.3 -0.25 -0.2 -0.15 -0.1 -0.05 -0.025 0.025 0.05 0.1 0.15 0.2 0.25 0.3 0.4 0.6 0.8 1 2 3 4 5 6];
+% V_prebias = [-6 -5 -4 -3 -2 -1 -0.8 -0.6 -0.4 -0.3 -0.25 -0.2 -0.15 -0.1 -0.05 -0.025 0.025 0.05 0.1 0.15 0.2 0.25 0.3 0.4 0.6 0.8 1 2 3 4 5 6];
 %V_prebias = [-0.5 -0.1 0 0.1 0.5];
-paramvar= V_prebias;
+% paramvar= V_prebias;
 
 % Ncat = [1e13,1e15,1e16,1e17,1e18,1e19]; 
 % Ncat=  [1e5,1e12,1e13,1e14,1e15,1e16,1e17,1e18,1e19,1e20];
@@ -58,9 +62,10 @@ par = pc(FileName);
 % par.Phi_left = paramvar(k);             
 % par.Phi_right = paramvar(k);
 % par.d = paramvar(k);
-% layerpoints = [750 500 300 100 100 100];
+% layerpoints = [20000 10000];
 % par.layer_points = layerpoints(k);
 %par.layer_points = round(min([1000 density*paramvar(k)]));
+par.SRHset = 0;
 par = refresh_device(par);
 
 
@@ -73,31 +78,31 @@ Paramvarstr{k} = num2str(paramvar(k),'%10.3e\n');
 soleq{1,k} = Paramvarstr{k};
 soleq{2,k} = equilibrate(par);
 
-sol_prebias{1,k} = Paramvarstr{k};
+% sol_prebias{1,k} = Paramvarstr{k};
 
 Conductance_eq(k) = 1./(trapz(par.xx,1./(par.e.*(soleq{2,k}.ion.u(end,:,2).*par.mue + soleq{2,k}.ion.u(end,:,3).*par.muh))));
 
 JV{1,k} = Paramvarstr{k};
-% JV{2,k} = doJV(soleq{2,k}.ion, 1, 2000, 0, 0, 0, 50, 1);
+JV{2,k} = doJV(soleq{2,k}.ion, paramvar(k), 500, 0, 1, 0, 30, 1);
 
-if paramvar(k) == 0 
-    figure(2)
-    hold on 
-    JV{2,k} = doJV(soleq{2,k}.ion, 1, 2500, 0, 0, 0, 30, 1);
-    sol_prebias{2,k} = soleq{2,k}.ion;
-    Conductance_prebias(k) = Conductance_eq(k);
-    Conductance_prebias0V(k) = Conductance_eq(k);
-else  
-    sol_prebias{2,k} = jumptoV(soleq{2,k}.ion, paramvar(k), 500, 1, 0, 1, 0);
-    Conductance_prebias(k) =  (1./(trapz(par.xx,1./(par.e.*(sol_prebias{2,k}.u(end,:,2).*par.mue + sol_prebias{2,k}.u(end,:,3).*par.muh)))));
-    figure(2)
-    hold on 
-    scantoJV{1,k} = doJV(sol_prebias{2,k},0.1,500,0,0,paramvar(k),0,1);
-    % prebias_0V{1,k} = stabilize(scantoJV{1,k}.dk.f);
-    Conductance_prebias0V(k) =  (1./(trapz(par.xx,1./(par.e.*(scantoJV{1,k}.dk.f.u(end,:,2).*par.mue + scantoJV{1,k}.dk.f.u(end,:,3).*par.muh)))));
-    % Perform a current voltage scan with frozen ions to 100V
-    JV{2,k} = doJV(scantoJV{1,k}.dk.f, 1, 2500, 0, 0, 0, 30, 1);
-end
+% if paramvar(k) == 0 
+%     figure(2)
+%     hold on 
+%     JV{2,k} = doJV(soleq{2,k}.ion, 1, 2500, 0, 0, 0, 30, 1);
+%     sol_prebias{2,k} = soleq{2,k}.ion;
+%     Conductance_prebias(k) = Conductance_eq(k);
+%     Conductance_prebias0V(k) = Conductance_eq(k);
+% else  
+%     sol_prebias{2,k} = jumptoV(soleq{2,k}.ion, paramvar(k), 500, 1, 0, 1, 0);
+%     Conductance_prebias(k) =  (1./(trapz(par.xx,1./(par.e.*(sol_prebias{2,k}.u(end,:,2).*par.mue + sol_prebias{2,k}.u(end,:,3).*par.muh)))));
+%     figure(2)
+%     hold on 
+%     scantoJV{1,k} = doJV(sol_prebias{2,k},0.1,500,0,0,paramvar(k),0,1);
+%     % prebias_0V{1,k} = stabilize(scantoJV{1,k}.dk.f);
+%     Conductance_prebias0V(k) =  (1./(trapz(par.xx,1./(par.e.*(scantoJV{1,k}.dk.f.u(end,:,2).*par.mue + scantoJV{1,k}.dk.f.u(end,:,3).*par.muh)))));
+%     % Perform a current voltage scan with frozen ions to 100V
+%     JV{2,k} = doJV(scantoJV{1,k}.dk.f, 1, 2500, 0, 0, 0, 30, 1);
+% end
 
 %% ANALYSIS %%
 % Call dfana to obtain band energies and QFLs for this worksapce           
@@ -254,7 +259,7 @@ hold on
 
 VonsLabel = Vons(imag(Vons)==0);
 
-figure(999)
+figure(998)
 loglog(Vapp,Jtot,'-','LineWidth',1)
 %xline(VonsLabel(index),'--',{'Onset Voltage'})
 xlabel('log(Vapp)')
